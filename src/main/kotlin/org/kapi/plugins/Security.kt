@@ -8,8 +8,10 @@ import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
+import kotlinx.serialization.Serializable
 
 fun Application.configureSecurity() {
+
     authentication {
         oauth("auth-oauth-google") {
             urlProvider = { "http://localhost:8080/callback" }
@@ -21,7 +23,7 @@ fun Application.configureSecurity() {
                     requestMethod = HttpMethod.Post,
                     clientId = System.getenv("GOOGLE_CLIENT_ID"),
                     clientSecret = System.getenv("GOOGLE_CLIENT_SECRET"),
-                    defaultScopes = listOf("https://www.googleapis.com/auth/userinfo.profile")
+                    defaultScopes = listOf("https://www.googleapis.com/auth/userinfo.profile"),
                 )
             }
             client = HttpClient(Apache)
@@ -35,11 +37,13 @@ fun Application.configureSecurity() {
 
             get("/callback") {
                 val principal: OAuthAccessTokenResponse.OAuth2? = call.authentication.principal()
-                call.sessions.set(UserSession(principal?.accessToken.toString()))
-                call.respondRedirect("/hello")
+                val accessToken = principal?.accessToken.toString()
+                call.sessions.set(UserSession(accessToken))
+                call.respondRedirect("/")
             }
         }
     }
 }
 
-class UserSession(accessToken: String)
+@Serializable
+data class UserSession(val accessToken: String)

@@ -35,6 +35,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation("org.mongodb:bson-kotlinx:4.10.1")
     implementation("org.mongodb:mongodb-driver-kotlin-coroutine:4.10.1")
+    implementation("io.ktor:ktor-client-apache:2.3.4")
 
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
