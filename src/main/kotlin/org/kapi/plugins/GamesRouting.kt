@@ -3,6 +3,7 @@ package org.kapi.plugins
 import com.mongodb.client.model.Filters.eq
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -21,40 +22,43 @@ fun Application.configureGamesRouting() {
     val collection = database.getCollection<Game>("games")
 
     routing {
-        route("/api/games") {
-            get("") {
-                val users = collection.find().toList()
+        authenticate("auth-oauth-google", strategy = AuthenticationStrategy.Required) {
+            route("/api/games") {
+                get("") {
+                    val users = collection.find().toList()
 
-                call.respond(users)
-            }
-
-            post("") {
-                val game = call.receive<Game>()
-
-                val result = collection.insertOne(game)
-
-                if (result.insertedId != null)
-                    call.respond(InsertedIdResponse(result.insertedId.asObjectId().value))
-                else {
-                    call.response.status(HttpStatusCode.InternalServerError)
-                    call.respondText("Fail")
+                    call.respond(users)
                 }
-            }
 
-            get("/{gameId}") {
-                val gameId = call.parameters["gameId"] ?: throw Error("No gameId")
+                post("") {
+                    val game = call.receive<Game>()
 
-                val game = collection.find(eq("_id", ObjectId(gameId))).firstOrNull() ?: throw Error("Invalid gameId")
+                    val result = collection.insertOne(game)
 
-                call.respond(game)
-            }
+                    if (result.insertedId != null)
+                        call.respond(InsertedIdResponse(result.insertedId.asObjectId().value))
+                    else {
+                        call.response.status(HttpStatusCode.InternalServerError)
+                        call.respondText("Fail")
+                    }
+                }
 
-            delete("/{gameId}") {
-                val gameId = call.parameters["gameId"] ?: throw Error("No gameId")
+                get("/{gameId}") {
+                    val gameId = call.parameters["gameId"] ?: throw Error("No gameId")
 
-                collection.findOneAndDelete(eq("_id", ObjectId(gameId))) ?: throw Error("Invalid gameId")
+                    val game =
+                        collection.find(eq("_id", ObjectId(gameId))).firstOrNull() ?: throw Error("Invalid gameId")
 
-                call.respond(MessageResponse("Success"))
+                    call.respond(game)
+                }
+
+                delete("/{gameId}") {
+                    val gameId = call.parameters["gameId"] ?: throw Error("No gameId")
+
+                    collection.findOneAndDelete(eq("_id", ObjectId(gameId))) ?: throw Error("Invalid gameId")
+
+                    call.respond(MessageResponse("Success"))
+                }
             }
         }
     }

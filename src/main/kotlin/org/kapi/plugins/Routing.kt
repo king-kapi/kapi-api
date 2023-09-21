@@ -7,7 +7,7 @@ import io.ktor.server.sessions.*
 
 fun Application.configureRouting() {
     routing {
-        get("/") {
+        get("/hello") {
             val userSession: UserSession? = call.sessions.get()
             if (userSession != null) {
                 call.respondText("Hello, World!.")
