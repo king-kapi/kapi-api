@@ -8,9 +8,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
-import org.kapi.plugins.configureRouting
-import org.kapi.plugins.configureSecurity
-import org.kapi.plugins.configureUsersRouting
+import org.kapi.plugins.*
 import org.kapi.serializer.ObjectIdJsonSerializer
 
 fun main() {
@@ -30,4 +28,6 @@ fun Application.module() {
     configureSecurity()
     configureRouting()
     configureUsersRouting()
+    configureGamesRouting()
+    configureTagsRouting()
 }

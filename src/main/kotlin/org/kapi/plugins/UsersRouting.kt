@@ -14,34 +14,46 @@ fun Application.configureUsersRouting() {
     val collection = database.getCollection<User>("users");
 
     routing {
-        get("/api/users") {
-            val users = collection.find().toList()
+        route("/api/users") {
+            get("/") {
+                val users = collection.find().toList()
 
-            call.respond(users);
-        }
+                call.respond(users);
+            }
 
-        get("/api/current") {
-            call.respondText("stub");
-        }
+            get("/current") {
+                call.respondText("stub");
+            }
 
-        get("/api/{userId}/current") {
-            call.respondText("stub");
-        }
+            get("/{userId}") {
+                val userId = call.parameters["userId"];
+                if (userId != null)
+                    call.respondText(userId)
+                call.respond("stub")
+            }
 
-        get("/api/status") {
-            call.respondText("stub");
-        }
+            get("/{userId}/status") {
+                val userId = call.parameters["userId"];
+                if (userId != null)
+                    call.respondText(userId)
+                call.respond("stub")
+            }
 
-        get("/api/friends") {
-            call.respondText("stub");
-        }
+            get("/status") {
+                call.respondText("stub");
+            }
 
-        post("/api/friends") {
-            call.respondText("stub");
-        }
+            get("/friends") {
+                call.respondText("stub");
+            }
 
-        post("/api/onboard") {
-            call.respondText("stub");
+            post("/friends") {
+                call.respondText("stub");
+            }
+
+            post("/onboard") {
+                call.respondText("stub");
+            }
         }
     }
 }
