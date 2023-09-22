@@ -13,15 +13,18 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import org.kapi.auth.registerDiscordAuth
 import org.kapi.auth.registerEmailAuth
 import org.kapi.auth.registerGoogleAuth
 import org.kapi.responses.MessageResponse
 
 val httpClient = HttpClient(CIO) {
     install(ContentNegotiation) {
-        json()
+        json(Json {
+            ignoreUnknownKeys = true
+        })
     }
 }
 
@@ -63,19 +66,10 @@ fun Application.configureSecurity() {
     }
 
     registerGoogleAuth(httpClient)
+    registerDiscordAuth(httpClient)
     // todo: only email if env is development
     registerEmailAuth()
 }
-
-@Serializable
-data class UserInfo(
-    val id: String,
-    val email: String,
-    @SerialName("verified_email")
-    val verified: Boolean,
-    val name: String,
-    val picture: String,
-)
 
 @Serializable
 data class JwtSession(

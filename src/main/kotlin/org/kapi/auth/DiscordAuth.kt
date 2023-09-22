@@ -14,46 +14,51 @@ import kotlinx.serialization.Serializable
 import org.kapi.plugins.JwtSession
 import org.kapi.responses.MessageResponse
 
-fun Application.registerGoogleAuth(httpClient: HttpClient) {
+fun Application.registerDiscordAuth(httpClient: HttpClient) {
     authentication {
-        oauth("auth-oauth-google") {
-            urlProvider = { "http://localhost:8080/callback" }
+        oauth("auth-oauth-discord") {
+            urlProvider = { "http://localhost:8080/api/auth/discord/callback" }
             providerLookup = {
                 OAuthServerSettings.OAuth2ServerSettings(
-                    name = "google",
-                    authorizeUrl = "https://accounts.google.com/o/oauth2/auth",
-                    accessTokenUrl = "https://accounts.google.com/o/oauth2/token",
+                    name = "discord",
+                    authorizeUrl = "https://discord.com/api/oauth2/authorize",
+                    accessTokenUrl = "https://discord.com/api/oauth2/token",
                     requestMethod = HttpMethod.Post,
-                    clientId = System.getenv("GOOGLE_CLIENT_ID"),
-                    clientSecret = System.getenv("GOOGLE_CLIENT_SECRET"),
-                    defaultScopes = listOf("https://www.googleapis.com/auth/userinfo.email"),
+                    clientId = System.getenv("DISCORD_CLIENT_ID"),
+                    clientSecret = System.getenv("DISCORD_CLIENT_SECRET"),
+                    defaultScopes = listOf("email"),
                 )
             }
             client = httpClient
         }
     }
     routing {
-        authenticate("auth-oauth-google") {
-            get("/api/auth/google/login") {
+        authenticate("auth-oauth-discord") {
+            get("/api/auth/discord/login") {
                 // redirects automagically?
             }
 
-            get("/callback") {
+            get("/api/auth/discord/callback") {
                 val principal: OAuthAccessTokenResponse.OAuth2? = call.principal()
                 val accessToken = principal?.accessToken
 
                 // on success
                 if (accessToken != null) {
 
-                    val userInfo: UserInfo = httpClient.get("https://www.googleapis.com/userinfo/v2/me") {
+                    val userInfo: DiscordUserInfo = httpClient.get("https://discord.com/api/users/@me") {
                         headers {
                             append(HttpHeaders.Authorization, "Bearer $accessToken")
                         }
                     }.body()
 
-                    val token = Jwt.create(userInfo.email)
-                    call.sessions.set(JwtSession(token))
-                    call.respondRedirect("/hello")
+                    if (userInfo.email == null) {
+                        call.response.status(HttpStatusCode.BadRequest)
+                        call.respond(MessageResponse("No email in discord account."))
+                    } else {
+                        val token = Jwt.create(userInfo.email)
+                        call.sessions.set(JwtSession(token))
+                        call.respondRedirect("/hello")
+                    }
                 } else {
                     call.response.status(HttpStatusCode.Unauthorized)
                     call.respond(MessageResponse("Unauthorized."))
@@ -64,11 +69,7 @@ fun Application.registerGoogleAuth(httpClient: HttpClient) {
 }
 
 @Serializable
-data class UserInfo(
-    val id: String,
-    val email: String,
-    @SerialName("verified_email")
-    val verified: Boolean,
-    val name: String,
-    val picture: String,
+
+data class DiscordUserInfo(
+    val email: String?,
 )

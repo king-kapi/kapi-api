@@ -24,7 +24,7 @@ class Jwt {
 
             // create new user
             if (user == null) {
-                throw Exception("Can't find user's email")
+                throw Exception("Can't find user's email: $email")
             }
 
             return JWT.create()
