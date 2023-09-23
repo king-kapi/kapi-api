@@ -11,7 +11,6 @@ import org.kapi.plugins.JwtSession
 // for development use only
 fun Application.registerEmailAuth() {
     routing {
-
         post("/api/auth/email/login") {
             val email = call.receive<AuthParams>().email
 
