@@ -4,7 +4,9 @@ import com.mongodb.client.model.Projections
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.bson.conversions.Bson
 import org.bson.types.ObjectId
+import org.kapi.enums.UserStatus
 
 @Serializable
 data class Birthday(
@@ -16,20 +18,20 @@ data class Birthday(
 @Serializable
 data class User(
     @SerialName("_id")
-    @Contextual val id: ObjectId,
+    @Contextual val id: ObjectId? = null,
     val email: String,
     val username: String,
     val tag: String,
     val bio: String,
     val status: Int,
-    val friends: List<@Contextual ObjectId>?,
-    val games: List<@Contextual ObjectId>?,
-    val pronouns: String?,
-    val birthday: Birthday?,
-    val language: String?,
-    val timezone: String?,
-    val avatarColor: String?,
-    val lobby: String?,
+    val friends: List<@Contextual ObjectId>? = null,
+    val games: List<@Contextual ObjectId>? = null,
+    val pronouns: String? = null,
+    val birthday: Birthday? = null,
+    val language: String? = null,
+    val timezone: String? = null,
+    val avatarColor: String? = null,
+    val lobby: String? = null,
     val onboarded: Boolean
 )
 
@@ -44,7 +46,7 @@ data class MinimalUser(
     val pronouns: String?
 )
 
-val minimalUserProjection =
+val minimalUserProjection: Bson =
     Projections.include(User::username.name, User::tag.name, User::bio.name, User::status.name, User::pronouns.name)
 
 @Serializable
@@ -56,4 +58,13 @@ data class OnboardingParams(
     val language: String? = null,
     val timezone: String? = null,
     val avatarColor: String? = null
+)
+
+fun createNewUser(email: String) = User(
+    email = email,
+    username = "",
+    tag = "",
+    bio = "",
+    status = UserStatus.OFFLINE.num,
+    onboarded = false
 )
