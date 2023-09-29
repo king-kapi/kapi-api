@@ -3,9 +3,9 @@ package org.kapi.auth
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
@@ -15,35 +15,34 @@ import org.kapi.plugins.JwtSession
 import org.kapi.responses.MessageResponse
 
 fun Application.registerDiscordAuth(httpClient: HttpClient) {
-    authentication {
-        oauth("auth-oauth-discord") {
-            urlProvider = { "http://localhost:8080/api/auth/discord/callback" }
-            providerLookup = {
-                OAuthServerSettings.OAuth2ServerSettings(
-                    name = "discord",
-                    authorizeUrl = "https://discord.com/api/oauth2/authorize",
-                    accessTokenUrl = "https://discord.com/api/oauth2/token",
-                    requestMethod = HttpMethod.Post,
-                    clientId = System.getenv("DISCORD_CLIENT_ID"),
-                    clientSecret = System.getenv("DISCORD_CLIENT_SECRET"),
-                    defaultScopes = listOf("email"),
-                )
-            }
-            client = httpClient
-        }
-    }
+    val client_id = environment.config.property("ktor.deployment.discord_client_id").getString()
+    val secret = environment.config.property("ktor.deployment.discord_secret").getString()
+
     routing {
-        authenticate("auth-oauth-discord") {
-            get("/api/auth/discord/login") {
-                // redirects automagically?
-            }
+        get("/api/auth/discord/exchange") {
+            val code = call.request.queryParameters["code"]
+            val redirectUri = call.request.queryParameters["redirect_uri"]
+            if (code == null) {
+                call.response.status(HttpStatusCode.BadRequest)
+                call.respond(MessageResponse("Missing code."))
+            } else if (redirectUri == null) {
+                call.response.status(HttpStatusCode.BadRequest)
+                call.respond(MessageResponse("Missing redirect_uri."))
+            } else {
+                val response = httpClient.submitForm(
+                    url = "https://discord.com/api/oauth2/token",
+                    formParameters = parameters {
+                        append("client_id", client_id)
+                        append("client_secret", secret)
+                        append("grant_type", "authorization_code")
+                        append("code", code)
+                        append("redirect_uri", redirectUri)
+                    }
+                )
 
-            get("/api/auth/discord/callback") {
-                val principal: OAuthAccessTokenResponse.OAuth2? = call.principal()
-                val accessToken = principal?.accessToken
-
-                // on success
-                if (accessToken != null) {
+                if (response.status.value in 200..299) {
+                    val tokenInfo: DiscordTokenInfo = response.body()
+                    val accessToken = tokenInfo.accessToken
 
                     val userInfo: DiscordUserInfo = httpClient.get("https://discord.com/api/users/@me") {
                         headers {
@@ -57,7 +56,7 @@ fun Application.registerDiscordAuth(httpClient: HttpClient) {
                     } else {
                         val token = Jwt.create(userInfo.email)
                         call.sessions.set(JwtSession(token))
-                        call.respondRedirect("/hello")
+                        call.respond("")
                     }
                 } else {
                     call.response.status(HttpStatusCode.Unauthorized)
@@ -69,7 +68,19 @@ fun Application.registerDiscordAuth(httpClient: HttpClient) {
 }
 
 @Serializable
+data class DiscordTokenInfo(
+    @SerialName("token_type")
+    val tokenType: String,
+    @SerialName("access_token")
+    val accessToken: String,
+    @SerialName("expires_in")
+    val expiresIn: Int,
+    @SerialName("refresh_token")
+    val refreshToken: String,
+    val scope: String
+)
 
+@Serializable
 data class DiscordUserInfo(
     val email: String?,
 )

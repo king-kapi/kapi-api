@@ -22,43 +22,41 @@ fun Application.configureGamesRouting() {
     val collection = database.getCollection<Game>("games")
 
     routing {
-        authenticate("auth-oauth-google", strategy = AuthenticationStrategy.Required) {
-            route("/api/games") {
-                get("") {
-                    val users = collection.find().toList()
+        route("/api/games") {
+            get("") {
+                val users = collection.find().toList()
 
-                    call.respond(users)
+                call.respond(users)
+            }
+
+            post("") {
+                val game = call.receive<Game>()
+
+                val result = collection.insertOne(game)
+
+                if (result.insertedId != null)
+                    call.respond(InsertedIdResponse(result.insertedId.asObjectId().value))
+                else {
+                    call.response.status(HttpStatusCode.InternalServerError)
+                    call.respondText("Fail")
                 }
+            }
 
-                post("") {
-                    val game = call.receive<Game>()
+            get("/{gameId}") {
+                val gameId = call.parameters["gameId"] ?: throw Error("No gameId")
 
-                    val result = collection.insertOne(game)
+                val game =
+                    collection.find(eq("_id", ObjectId(gameId))).firstOrNull() ?: throw Error("Invalid gameId")
 
-                    if (result.insertedId != null)
-                        call.respond(InsertedIdResponse(result.insertedId.asObjectId().value))
-                    else {
-                        call.response.status(HttpStatusCode.InternalServerError)
-                        call.respondText("Fail")
-                    }
-                }
+                call.respond(game)
+            }
 
-                get("/{gameId}") {
-                    val gameId = call.parameters["gameId"] ?: throw Error("No gameId")
+            delete("/{gameId}") {
+                val gameId = call.parameters["gameId"] ?: throw Error("No gameId")
 
-                    val game =
-                        collection.find(eq("_id", ObjectId(gameId))).firstOrNull() ?: throw Error("Invalid gameId")
+                collection.findOneAndDelete(eq("_id", ObjectId(gameId))) ?: throw Error("Invalid gameId")
 
-                    call.respond(game)
-                }
-
-                delete("/{gameId}") {
-                    val gameId = call.parameters["gameId"] ?: throw Error("No gameId")
-
-                    collection.findOneAndDelete(eq("_id", ObjectId(gameId))) ?: throw Error("Invalid gameId")
-
-                    call.respond(MessageResponse("Success"))
-                }
+                call.respond(MessageResponse("Success"))
             }
         }
     }

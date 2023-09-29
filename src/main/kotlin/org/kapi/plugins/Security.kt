@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.http.*
 import io.ktor.http.auth.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -57,7 +58,7 @@ fun Application.configureSecurity() {
     }
 
     routing {
-        route("/api/auth/signout") {
+        route("/api/auth/sign-out") {
             handle {
                 call.sessions.clear("jwt-token")
                 call.respond(MessageResponse("Signed out."))
@@ -74,4 +75,9 @@ fun Application.configureSecurity() {
 @Serializable
 data class JwtSession(
     val jwt: String
+)
+
+@Serializable
+data class LoginStatus(
+    val loggedIn: Boolean
 )

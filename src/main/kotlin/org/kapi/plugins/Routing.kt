@@ -17,6 +17,15 @@ fun Application.configureRouting() {
                     call.respondText("Hello, world!")
                 }
             }
+
+            get("/api/hello") {
+                val principal = call.principal<JWTPrincipal>()
+                if (principal != null) {
+                    call.respondText("Hello, ${principal["email"]}!")
+                } else {
+                    call.respondText("Hello, world!")
+                }
+            }
         }
     }
 }

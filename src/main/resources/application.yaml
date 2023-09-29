@@ -1,6 +1,10 @@
 ktor:
   deployment:
     port: 8080
+    discord_client_id: $DISCORD_CLIENT_ID
+    discord_secret: $DISCORD_SECRET
+    google_client_id: $GOOGLE_CLIENT_ID
+    google_secret: $GOOGLE_SECRET
   application:
     modules:
       - org.kapi.ApplicationKt.module
