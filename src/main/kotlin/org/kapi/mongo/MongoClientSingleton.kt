@@ -1,6 +1,7 @@
 package org.kapi.mongo
 
 import com.mongodb.kotlin.client.coroutine.MongoClient
+import com.mongodb.kotlin.client.coroutine.MongoDatabase
 
 class MongoClientSingleton {
     companion object {
@@ -15,6 +16,10 @@ class MongoClientSingleton {
             mongoClient = MongoClient.create("mongodb://localhost:27017/kapi")
 
             return mongoClient as MongoClient
+        }
+
+        fun getKapiDatabase(): MongoDatabase {
+            return getClient().getDatabase("kapi")
         }
     }
 }
