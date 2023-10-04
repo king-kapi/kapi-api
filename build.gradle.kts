@@ -42,3 +42,20 @@ dependencies {
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }
+
+ktor {
+    docker {
+        jreVersion.set(JavaVersion.VERSION_17)
+        localImageName.set("kapi-server")
+        imageTag.set("0.0.1-preview")
+
+
+        externalRegistry.set(
+            io.ktor.plugin.features.DockerImageRegistry.dockerHub(
+                appName = provider { "kingkapi/kapi-server" },
+                username = providers.environmentVariable("DOCKER_HUB_USERNAME"),
+                password = providers.environmentVariable("DOCKER_HUB_PASSWORD")
+            )
+        )
+    }
+}
