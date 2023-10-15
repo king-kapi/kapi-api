@@ -1,5 +1,6 @@
 package org.kapi.service
 
+import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
@@ -23,6 +24,11 @@ class UserService(database: MongoDatabase) {
         return collection.find(eq("_id", userId)).firstOrNull() ?: throw UserNotFound(userId)
     }
 
+    suspend fun getUser(userEmail: String): User {
+        return collection.find(eq("email", userEmail)).firstOrNull()
+            ?: throw Exception("user not found with email $userEmail")
+    }
+
     // TODO: throw the correct exception if friends is null
     suspend fun getFriends(userId: ObjectId): List<MinimalUser> {
         val user = this.getUser(userId)
@@ -43,6 +49,12 @@ class UserService(database: MongoDatabase) {
 
             return friends
         }
+    }
+
+    suspend fun createNewUser(email: String): User {
+        val result = collection.insertOne(org.kapi.data.createNewUser(email))
+        val insertedId = result.insertedId?.asObjectId()?.value ?: throw Exception("Something is wrong")
+        return this.getUser(insertedId)
     }
 
     suspend fun onboardUser(

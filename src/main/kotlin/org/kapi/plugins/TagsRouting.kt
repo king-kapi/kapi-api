@@ -15,7 +15,7 @@ import org.kapi.responses.InsertedIdResponse
 import org.kapi.responses.MessageResponse
 
 fun Application.configureTagsRouting() {
-    val mongoClient = MongoClientSingleton.getClient()
+    val mongoClient = MongoClientSingleton.getClient(environment)
 
     val database = mongoClient.getDatabase("kapi")
     val collection = database.getCollection<Tag>("tags")

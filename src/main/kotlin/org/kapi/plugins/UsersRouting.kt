@@ -15,7 +15,7 @@ import org.kapi.responses.MessageResponse
 import org.kapi.service.UserService
 
 fun Application.configureUsersRouting() {
-    val userService = UserService(MongoClientSingleton.getKapiDatabase())
+    val userService = UserService(MongoClientSingleton.getKapiDatabase(environment))
 
     routing {
         route("/api/users") {

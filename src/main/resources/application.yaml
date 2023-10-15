@@ -5,6 +5,7 @@ ktor:
     discord_secret: $DISCORD_SECRET
     google_client_id: $GOOGLE_CLIENT_ID
     google_secret: $GOOGLE_SECRET
+    mongo_connection_uri: $MONGO_CONNECTION_URI
   application:
     modules:
       - org.kapi.ApplicationKt.module

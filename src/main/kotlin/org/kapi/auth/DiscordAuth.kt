@@ -11,10 +11,14 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.kapi.mongo.MongoClientSingleton
 import org.kapi.plugins.JwtSession
 import org.kapi.responses.MessageResponse
+import org.kapi.service.UserService
 
 fun Application.registerDiscordAuth(httpClient: HttpClient) {
+    val jwt = Jwt(UserService(MongoClientSingleton.getKapiDatabase(environment)))
+
     val client_id = environment.config.property("ktor.deployment.discord_client_id").getString()
     val secret = environment.config.property("ktor.deployment.discord_secret").getString()
 
@@ -54,7 +58,7 @@ fun Application.registerDiscordAuth(httpClient: HttpClient) {
                         call.response.status(HttpStatusCode.BadRequest)
                         call.respond(MessageResponse("No email in discord account."))
                     } else {
-                        val token = Jwt.create(userInfo.email)
+                        val token = jwt.create(userInfo.email)
                         call.sessions.set(JwtSession(token))
                         call.respond("")
                     }

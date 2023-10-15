@@ -11,10 +11,14 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.kapi.mongo.MongoClientSingleton
 import org.kapi.plugins.JwtSession
 import org.kapi.responses.MessageResponse
+import org.kapi.service.UserService
 
 fun Application.registerGoogleAuth(httpClient: HttpClient) {
+    val jwt = Jwt(UserService(MongoClientSingleton.getKapiDatabase(environment)))
+
     val client_id = environment.config.property("ktor.deployment.google_client_id").getString()
     val secret = environment.config.property("ktor.deployment.google_secret").getString()
 
@@ -52,7 +56,7 @@ fun Application.registerGoogleAuth(httpClient: HttpClient) {
                         }
                     }.body()
 
-                    val token = Jwt.create(userInfo.email)
+                    val token = jwt.create(userInfo.email)
                     call.sessions.set(JwtSession(token))
                     call.respond("")
                 } else {

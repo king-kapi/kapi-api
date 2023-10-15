@@ -1,1 +1,1 @@
-rootProject.name = "kapi-server"
+rootProject.name = "kapi-api"

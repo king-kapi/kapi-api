@@ -8,37 +8,30 @@ import kotlinx.coroutines.flow.firstOrNull
 import org.kapi.data.User
 import org.kapi.data.createNewUser
 import org.kapi.mongo.MongoClientSingleton
+import org.kapi.service.UserService
 import java.util.*
 
-class Jwt {
-    companion object {
-        private val mongoClient = MongoClientSingleton.getClient()
-        private val database = mongoClient.getDatabase("kapi")
-        private val collection = database.getCollection<User>("users")
+class Jwt(private val userService: UserService) {
+    private val JWT_AUDIENCE = "jwt-audience"
+    private val JWT_DOMAIN = "https://jwt-provider-domain/"
 
-        private const val JWT_AUDIENCE = "jwt-audience"
-        private const val JWT_DOMAIN = "https://jwt-provider-domain/"
+    //        private const val jwtRealm = "ktor sample app"
+    private val JWT_SECRET = "secret"
 
-        //        private const val jwtRealm = "ktor sample app"
-        private const val JWT_SECRET = "secret"
-
-        suspend fun create(email: String): String {
-            var user = collection.find(Filters.eq("email", email)).firstOrNull()
-
+    suspend fun create(email: String): String {
+        val user = try {
+            userService.getUser(userEmail = email)
+        } catch (e: Exception) {
             // create new user
-            if (user == null) {
-                val result = collection.insertOne(createNewUser(email))
-                val insertedId = result.insertedId?.asObjectId()?.value ?: throw Exception("Something is wrong")
-                user = collection.find(Filters.eq("_id", insertedId)).first()
-            }
-
-            return JWT.create()
-                .withAudience(JWT_AUDIENCE)
-                .withIssuer(JWT_DOMAIN)
-                .withClaim("email", email)
-                .withClaim("id", user.id.toString())
-                .withExpiresAt(Date(System.currentTimeMillis() + 60000))
-                .sign(Algorithm.HMAC256(JWT_SECRET))
+            userService.createNewUser(email)
         }
+
+        return JWT.create()
+            .withAudience(JWT_AUDIENCE)
+            .withIssuer(JWT_DOMAIN)
+            .withClaim("email", email)
+            .withClaim("id", user.id.toString())
+            .withExpiresAt(Date(System.currentTimeMillis() + 60000))
+            .sign(Algorithm.HMAC256(JWT_SECRET))
     }
 }

@@ -46,13 +46,13 @@ dependencies {
 ktor {
     docker {
         jreVersion.set(JavaVersion.VERSION_17)
-        localImageName.set("kapi-server")
+        localImageName.set("kapi-api")
         imageTag.set("0.0.1-preview")
 
 
         externalRegistry.set(
             io.ktor.plugin.features.DockerImageRegistry.dockerHub(
-                appName = provider { "kingkapi/kapi-server" },
+                appName = provider { "kingkapi/kapi-api" },
                 username = providers.environmentVariable("DOCKER_HUB_USERNAME"),
                 password = providers.environmentVariable("DOCKER_HUB_PASSWORD")
             )
