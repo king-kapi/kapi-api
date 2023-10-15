@@ -41,6 +41,10 @@ class LobbyServiceTest {
         )
 
         assertEquals(2, lobbyService.getAllLobbies().size)
+
+        val success = lobbyService.deleteLobby(lobby2.id!!)
+        assert(success)
+        assertEquals(1, lobbyService.getAllLobbies().size)
     }
 
     @Test
@@ -61,15 +65,16 @@ class LobbyServiceTest {
             )
         )
 
-        var updatedLobby = lobbyService.sendJoinRequest(lobby1.id!!, user2.id!!)
+        assertEquals(0, lobbyService.getLobby(lobby1.id!!).requests.size)
 
-        assertEquals(1, updatedLobby!!.requests.size)
-        assertEquals(user2.id, updatedLobby.requests[0].sender)
-        assertEquals(1, updatedLobby.users.size)
+        // accept
+        val request1 = lobbyService.sendJoinRequest(lobby1.id!!, user2.id!!)
+        assertEquals(1, lobbyService.getLobby(lobby1.id!!).requests.size)
 
-        updatedLobby = lobbyService.acceptJoinRequest(lobby1.id!!, user2.id!!)
-
-        assertEquals(2, updatedLobby!!.users.size)
+        val updatedLobby = lobbyService.acceptJoinRequest(lobby1.id!!, request1.id)!!
+        assertEquals(0, updatedLobby.requests.size)
+        assertEquals(2, updatedLobby.users.size)
+        assertEquals(2, lobbyService.getLobby(lobby1.id!!).users.size)
 
         // deny
         val lobby2 = lobbyService.createLobby(
@@ -81,16 +86,13 @@ class LobbyServiceTest {
             )
         )
 
-        var updatedLobby2 = lobbyService.sendJoinRequest(lobby2.id!!, user1.id!!)
+        val request2 = lobbyService.sendJoinRequest(lobby2.id!!, user1.id!!)
+        assertEquals(1, lobbyService.getLobby(lobby2.id!!).requests.size)
 
-        assertEquals(1, updatedLobby2!!.requests.size)
-        assertEquals(user1.id, updatedLobby2.requests[0].sender)
-        assertEquals(1, updatedLobby2.users.size)
-
-        updatedLobby2 = lobbyService.denyJoinRequest(lobby2.id!!, user1.id!!)
-
+        val updatedLobby2 = lobbyService.denyJoinRequest(lobby2.id!!, request2.id)
         assertEquals(0, updatedLobby2!!.requests.size)
         assertEquals(1, updatedLobby2.users.size)
+        assertEquals(1, lobbyService.getLobby(lobby2.id!!).users.size)
     }
 
     @Test
@@ -112,7 +114,7 @@ class LobbyServiceTest {
         )
 
         val updatedLobby = lobbyService.kickPlayer(lobby1.id!!, user2Id)
-        
+
         assertEquals(1, updatedLobby!!.users.size)
     }
 }

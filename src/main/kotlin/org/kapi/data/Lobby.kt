@@ -24,6 +24,9 @@ data class Lobby(
 
 @Serializable
 data class LobbyRequest(
+    @SerialName("_id")
+    @Contextual
+    val id: ObjectId = ObjectId(),
     @Contextual
     val sender: ObjectId,
     val message: String = "",

@@ -34,7 +34,7 @@ fun Application.configureTagsRouting() {
                 val result = collection.insertOne(tag)
 
                 if (result.insertedId != null)
-                    call.respond(InsertedIdResponse(result.insertedId.asObjectId().value))
+                    call.respond(InsertedIdResponse(result.insertedId!!.asObjectId().value))
                 else {
                     call.response.status(HttpStatusCode.InternalServerError)
                     call.respondText("Fail")

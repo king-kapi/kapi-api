@@ -36,6 +36,7 @@ fun Application.module() {
     configureSecurity()
     configureRouting()
     configureUsersRouting()
+    configureLobbiesRouting()
     configureGamesRouting()
     configureTagsRouting()
 }

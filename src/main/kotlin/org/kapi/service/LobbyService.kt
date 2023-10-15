@@ -30,31 +30,41 @@ class LobbyService(database: MongoDatabase) {
         return collection.find(eq("_id", insertedId)).first()
     }
 
-    suspend fun getLobby(lobbyId: ObjectId): Lobby? {
-        return collection.find(eq("_id", lobbyId)).firstOrNull()
+    suspend fun getLobby(lobbyId: ObjectId): Lobby {
+        return collection.find(eq("_id", lobbyId)).firstOrNull() ?: throw LobbyNotFound(lobbyId);
     }
 
-    suspend fun sendJoinRequest(lobbyId: ObjectId, senderId: ObjectId, message: String = ""): Lobby? {
-        // verify lobby exists
-        getLobby(lobbyId) ?: throw LobbyNotFound(lobbyId)
-
-        val updates = Updates.push(Lobby::requests.name, LobbyRequest(sender = senderId, message = message))
-
-        return collection.findOneAndUpdate(
-            eq("_id", lobbyId),
-            updates,
-            FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
-        )
+    suspend fun deleteLobby(lobbyId: ObjectId): Boolean {
+        return try {
+            collection.deleteOne(eq("_id", lobbyId))
+            true
+        } catch (e: Exception) {
+            false
+        }
     }
 
-    suspend fun acceptJoinRequest(lobbyId: ObjectId, senderId: ObjectId): Lobby? {
+    suspend fun sendJoinRequest(lobbyId: ObjectId, senderId: ObjectId, message: String = ""): LobbyRequest {
         // verify lobby exists
-        getLobby(lobbyId) ?: throw LobbyNotFound(lobbyId)
+        getLobby(lobbyId)
+
+        val newRequest = LobbyRequest(sender = senderId, message = message)
+
+        val updates =
+            Updates.push(Lobby::requests.name, newRequest)
+
+        collection.updateOne(eq("_id", lobbyId), updates)
+
+        return newRequest;
+    }
+
+    suspend fun acceptJoinRequest(lobbyId: ObjectId, requestId: ObjectId): Lobby? {
+        // verify lobby exists
+        getLobby(lobbyId)
 
         val updates =
             Updates.combine(
-                Updates.push(Lobby::users.name, senderId),
-                Updates.pull(Lobby::requests.name, eq("sender", senderId))
+                Updates.push(Lobby::users.name, requestId),
+                Updates.pull(Lobby::requests.name, eq("_id", requestId))
             )
 
         return collection.findOneAndUpdate(
@@ -65,11 +75,11 @@ class LobbyService(database: MongoDatabase) {
 
     suspend fun denyJoinRequest(lobbyId: ObjectId, senderId: ObjectId): Lobby? {
         // verify lobby exists
-        getLobby(lobbyId) ?: throw LobbyNotFound(lobbyId)
+        getLobby(lobbyId)
 
         val updates =
             Updates.combine(
-                Updates.pull(Lobby::requests.name, eq("sender", senderId))
+                Updates.pull(Lobby::requests.name, eq("_id", senderId))
             )
 
         return collection.findOneAndUpdate(
@@ -80,7 +90,7 @@ class LobbyService(database: MongoDatabase) {
 
     suspend fun kickPlayer(lobbyId: ObjectId, kickedId: ObjectId): Lobby? {
         // verify lobby exists
-        getLobby(lobbyId) ?: throw LobbyNotFound(lobbyId)
+        getLobby(lobbyId)
 
         val updates =
             Updates.combine(
