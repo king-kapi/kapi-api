@@ -8,7 +8,7 @@ import io.ktor.server.sessions.*
 import kotlinx.serialization.Serializable
 import org.kapi.mongo.MongoClientSingleton
 import org.kapi.plugins.JwtSession
-import org.kapi.service.UserService
+import org.kapi.service.user.UserService
 
 // for development use only
 fun Application.registerEmailAuth() {

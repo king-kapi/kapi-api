@@ -3,9 +3,9 @@ package org.kapi
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
-import org.kapi.data.Lobby
-import org.kapi.service.LobbyService
-import org.kapi.service.UserService
+import org.kapi.data.LobbyDto
+import org.kapi.service.lobby.LobbyService
+import org.kapi.service.user.UserService
 import kotlin.test.assertEquals
 
 class LobbyServiceTest {
@@ -24,7 +24,7 @@ class LobbyServiceTest {
         val user2 = userService.createNewUser("test2@email.com")
 
         val lobby1 = lobbyService.createLobby(
-            Lobby(
+            LobbyDto(
                 name = "Test Lobby 1",
                 hostId = user1.id!!,
                 numPlayers = 5,
@@ -32,7 +32,7 @@ class LobbyServiceTest {
             )
         )
         val lobby2 = lobbyService.createLobby(
-            Lobby(
+            LobbyDto(
                 name = "Test Lobby 2",
                 hostId = user2.id!!,
                 numPlayers = 5,
@@ -57,7 +57,7 @@ class LobbyServiceTest {
         val user2 = userService.createNewUser("test2@email.com")
 
         val lobby1 = lobbyService.createLobby(
-            Lobby(
+            LobbyDto(
                 name = "Test Lobby 1",
                 hostId = user1.id!!,
                 numPlayers = 5,
@@ -78,7 +78,7 @@ class LobbyServiceTest {
 
         // deny
         val lobby2 = lobbyService.createLobby(
-            Lobby(
+            LobbyDto(
                 name = "Test Lobby 2",
                 hostId = user2.id!!,
                 numPlayers = 5,
@@ -105,7 +105,7 @@ class LobbyServiceTest {
         val user2Id = userService.createNewUser("test2@email.com").id!!
 
         val lobby1 = lobbyService.createLobby(
-            Lobby(
+            LobbyDto(
                 name = "Test Lobby 1",
                 hostId = user1Id,
                 numPlayers = 5,

@@ -10,14 +10,11 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
-import org.kapi.data.Lobby
-import org.kapi.data.OnboardingParams
+import org.kapi.data.LobbyDto
 import org.kapi.exceptions.LobbyNotFound
-import org.kapi.exceptions.UserNotFound
 import org.kapi.mongo.MongoClientSingleton
 import org.kapi.responses.MessageResponse
-import org.kapi.service.LobbyService
-import org.kapi.service.UserService
+import org.kapi.service.lobby.LobbyService
 
 fun Application.configureLobbiesRouting() {
     val lobbyService = LobbyService(MongoClientSingleton.getKapiDatabase(environment))
@@ -34,7 +31,7 @@ fun Application.configureLobbiesRouting() {
                     val meId = ObjectId(principal!!["id"])
 
                     val params = call.receive<NewLobbyParams>()
-                    val newLobby = Lobby(
+                    val newLobby = LobbyDto(
                         name = params.name,
                         hostId = meId,
                         users = listOf(meId),

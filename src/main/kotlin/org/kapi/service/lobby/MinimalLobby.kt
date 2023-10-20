@@ -1,4 +1,4 @@
-package org.kapi.data
+package org.kapi.service.lobby
 
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
 
 @Serializable
-data class Lobby(
+data class MinimalLobby(
     @SerialName("_id")
     @Contextual
     val id: ObjectId? = null,
@@ -16,14 +16,14 @@ data class Lobby(
     val tags: List<String> = ArrayList(),
     val numPlayers: Int,
     val description: String = "",
-    val requests: List<LobbyRequest> = ArrayList(),
+    val requests: List<LobbyRequestDto> = ArrayList(),
     val users: List<@Contextual ObjectId> = ArrayList(),
     @Contextual
     val chat: ObjectId? = null
 )
 
 @Serializable
-data class LobbyRequest(
+data class LobbyRequestDto(
     @SerialName("_id")
     @Contextual
     val id: ObjectId = ObjectId(),

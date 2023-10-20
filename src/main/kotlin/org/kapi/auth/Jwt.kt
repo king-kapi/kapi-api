@@ -2,16 +2,11 @@ package org.kapi.auth
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import com.mongodb.client.model.Filters
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
-import org.kapi.data.User
-import org.kapi.data.createNewUser
-import org.kapi.mongo.MongoClientSingleton
-import org.kapi.service.UserService
+import org.kapi.service.user.UserService
 import java.util.*
 
 class Jwt(private val userService: UserService) {
+    private val TWELVE_HOURS = 12 * 60 * 60 * 1000// in milliseconds
     private val JWT_AUDIENCE = "jwt-audience"
     private val JWT_DOMAIN = "https://jwt-provider-domain/"
 
@@ -31,7 +26,7 @@ class Jwt(private val userService: UserService) {
             .withIssuer(JWT_DOMAIN)
             .withClaim("email", email)
             .withClaim("id", user.id.toString())
-            .withExpiresAt(Date(System.currentTimeMillis() + 60000))
+            .withExpiresAt(Date(System.currentTimeMillis() + TWELVE_HOURS))
             .sign(Algorithm.HMAC256(JWT_SECRET))
     }
 }

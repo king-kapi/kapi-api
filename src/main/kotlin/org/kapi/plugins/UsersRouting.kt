@@ -12,7 +12,7 @@ import org.kapi.data.OnboardingParams
 import org.kapi.exceptions.UserNotFound
 import org.kapi.mongo.MongoClientSingleton
 import org.kapi.responses.MessageResponse
-import org.kapi.service.UserService
+import org.kapi.service.user.UserService
 
 fun Application.configureUsersRouting() {
     val userService = UserService(MongoClientSingleton.getKapiDatabase(environment))

@@ -1,4 +1,4 @@
-package org.kapi.service
+package org.kapi.service.user
 
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Filters.eq

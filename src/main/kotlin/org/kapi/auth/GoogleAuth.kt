@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
 import org.kapi.mongo.MongoClientSingleton
 import org.kapi.plugins.JwtSession
 import org.kapi.responses.MessageResponse
-import org.kapi.service.UserService
+import org.kapi.service.user.UserService
 
 fun Application.registerGoogleAuth(httpClient: HttpClient) {
     val jwt = Jwt(UserService(MongoClientSingleton.getKapiDatabase(environment)))
