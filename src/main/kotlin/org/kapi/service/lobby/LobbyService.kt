@@ -9,17 +9,20 @@ import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import org.bson.types.ObjectId
+import org.kapi.data.Chat
 import org.kapi.data.LobbyDto
 import org.kapi.data.LobbyRequestDto
 import org.kapi.data.User
 import org.kapi.exceptions.LobbyNotFound
 import org.kapi.exceptions.LobbyRequestNotFound
+import org.kapi.service.chat.ChatService
 import org.kapi.service.user.MinimalUser
 import org.kapi.service.user.UserService
 
 class LobbyService(database: MongoDatabase) {
     private val collection = database.getCollection<LobbyDto>("lobbies")
     private val userService = UserService(database)
+    private val chatService = ChatService(database)
 
     fun getCollection(): MongoCollection<LobbyDto> {
         return collection
@@ -29,41 +32,58 @@ class LobbyService(database: MongoDatabase) {
         return collection.find().toList()
     }
 
-    suspend fun getLobby(lobbyId: ObjectId): FullLobby {
+    suspend fun getLobby(lobbyId: ObjectId): LobbyDto {
         val lobbyDto = collection.find(eq("_id", lobbyId)).firstOrNull() ?: throw LobbyNotFound(lobbyId);
 
-        val users = ArrayList<User>()
-        for (userId in lobbyDto.users) {
-            users.add(userService.getUser(userId))
-        }
-
-        val requestsWithUser = ArrayList<LobbyRequestWithUser>()
-        for (request in lobbyDto.requests) {
-            requestsWithUser.add(
-                LobbyRequestWithUser(
-                    id = request.id,
-                    sender = MinimalUser(userService.getUser(request.sender)),
-                    message = request.message
-                )
-            )
-        }
-
-        return FullLobby(
-            id = lobbyDto.id,
-            hostId = lobbyDto.hostId,
-            name = lobbyDto.name,
-            game = lobbyDto.game,
-            tags = lobbyDto.tags,
-            numPlayers = lobbyDto.numPlayers,
-            description = lobbyDto.description,
-            users = users,
-            chat = lobbyDto.chat,
-            requests = requestsWithUser
-        );
+        return lobbyDto;
+//        val users = ArrayList<User>()
+//        for (userId in lobbyDto.users) {
+//            users.add(userService.getUser(userId))
+//        }
+//
+//        val requestsWithUser = ArrayList<LobbyRequestWithUser>()
+//        for (request in lobbyDto.requests) {
+//            requestsWithUser.add(
+//                LobbyRequestWithUser(
+//                    id = request.id,
+//                    sender = MinimalUser(userService.getUser(request.sender)),
+//                    message = request.message
+//                )
+//            )
+//        }
+//
+//        return FullLobby(
+//            id = lobbyDto.id,
+//            hostId = lobbyDto.hostId,
+//            name = lobbyDto.name,
+//            game = lobbyDto.game,
+//            tags = lobbyDto.tags,
+//            numPlayers = lobbyDto.numPlayers,
+//            description = lobbyDto.description,
+//            users = users,
+//            chatId = lobbyDto.chatId,
+//            requests = requestsWithUser
+//        );
     }
 
-    suspend fun createLobby(lobby: LobbyDto): FullLobby {
+    suspend fun createLobby(lobby: LobbyDto): LobbyDto {
         val insertedId = collection.insertOne(lobby).insertedId!!.asObjectId().value
+
+        // create a chat
+        val chat = chatService.createChat(
+            Chat(
+                name = "lobby-${insertedId}",
+                users = lobby.users
+            )
+        );
+
+        val update = Updates.set(LobbyDto::chatId.name, chat.id)
+        collection.findOneAndUpdate(
+            eq("_id", insertedId),
+            update,
+            FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
+        )
+
         return getLobby(insertedId)
     }
 
@@ -95,7 +115,7 @@ class LobbyService(database: MongoDatabase) {
         val lobby = getLobby(lobbyId)
 
         // find sender
-        var sender: MinimalUser? = null
+        var sender: ObjectId? = null
         for (request in lobby.requests) {
             if (request.id == requestId)
                 sender = request.sender
@@ -106,7 +126,7 @@ class LobbyService(database: MongoDatabase) {
 
         val updates =
             Updates.combine(
-                Updates.push(LobbyDto::users.name, sender.id),
+                Updates.push(LobbyDto::users.name, sender),
                 Updates.pull(LobbyDto::requests.name, eq("_id", requestId))
             )
 

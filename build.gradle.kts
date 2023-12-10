@@ -38,6 +38,7 @@ dependencies {
     implementation("io.ktor:ktor-client-cio-jvm:2.3.4")
     implementation("io.ktor:ktor-server-auth-jwt")
     implementation("io.ktor:ktor-server-auth-jwt-jvm:2.3.4")
+    implementation("io.ktor:ktor-server-websockets:$ktor_version")
 
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")

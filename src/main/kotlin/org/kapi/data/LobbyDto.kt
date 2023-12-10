@@ -19,7 +19,7 @@ data class LobbyDto(
     val requests: List<LobbyRequestDto> = ArrayList(),
     val users: List<@Contextual ObjectId> = ArrayList(),
     @Contextual
-    val chat: ObjectId? = null
+    val chatId: ObjectId? = null
 )
 
 @Serializable

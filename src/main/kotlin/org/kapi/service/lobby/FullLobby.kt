@@ -21,7 +21,7 @@ data class FullLobby(
     val requests: List<LobbyRequestWithUser> = ArrayList(),
     val users: List<User>,
     @Contextual
-    val chat: ObjectId? = null
+    val chatId: ObjectId? = null
 )
 
 @Serializable
